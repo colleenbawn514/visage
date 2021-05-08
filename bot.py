@@ -135,7 +135,7 @@ def handle_docs_photo(message):
             bot.delete_message(chat_id, processing_info_message.id)
             actions_with_ids = []        
             if len(user[chat_id]['source_images']) > 0:
-                actions_with_ids.append({"💅 Сделать красивыми принятые фото": "start_makeup"})
+                actions_with_ids.append({"💅 Сделать красивыми остальные фото": "start_makeup"})
             kb_actions = keyboa_maker(items=actions_with_ids)
             bot.send_message(
                 chat_id,
@@ -164,7 +164,7 @@ def handle_docs_photo(message):
             bot.delete_message(chat_id, processing_info_message.id)
         actions_with_ids = []        
         if len(user[chat_id]['source_images']) > 0:
-            actions_with_ids.append({"💅 Сделать красивыми приятные фото": "start_makeup"})
+            actions_with_ids.append({"💅 Сделать красивыми остальные фото": "start_makeup"})
         kb_actions = keyboa_maker(items=actions_with_ids)
         bot.send_message(
             chat_id,
