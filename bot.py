@@ -32,7 +32,7 @@ def callback_handler(call):
         user[chat_id]['lipstick_color'] = { 'r': 255, 'g': 0 , 'b': 0 }
         user[chat_id]['use_lipstick'] = True    
         
-        bot.edit_message_text('Цвет губ: крысный', chat_id, call.message.id)
+        bot.edit_message_text('Цвет губ: красный', chat_id, call.message.id)
         choose_liner(chat_id)
     elif call.data == 'lipstick_off':
         user[chat_id]['lipstick_color'] = None
