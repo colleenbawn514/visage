@@ -6,7 +6,8 @@ Created on Mon Mar 20 12:28:21 2017
 
 This module contains the ApplyMakeup class.
 """
-
+from scipy import interpolate
+from pylab import *
 import itertools
 import scipy.interpolate
 import cv2
@@ -20,7 +21,7 @@ from skimage import color
 
 PREDICTOR_PATH = "shape_predictor_68_face_landmarks.dat"
 CASC_PATH = "haarcascade_frontalface_default.xml"
-
+intensivity = 0.5
 
 class DetectLandmarks(object):
     """
@@ -99,7 +100,7 @@ class DetectLandmarks(object):
                 By default its value is IMAGE_DATA, and assumes imread() image is passed.
 
         Returns:
-            String with list of detected points of lips.
+            String with list of detected points of face.
 
         Error:
             Returns `None` if face not found in image.
@@ -118,6 +119,7 @@ class DetectLandmarks(object):
         landmarks = self.__get_landmarks(image)
         if landmarks[0] is None or landmarks[1] is None:
             return None
+            
         return landmarks
 
 
@@ -152,7 +154,113 @@ class DetectLandmarks(object):
             lips += str(point).replace('[', '').replace(']', '') + '\n'
         return lips
 
+    def get_blushs_right(self, image_file, flag=None):
+        """
+        Returns points for blushs in given image.
+        _______________________________________
+        Args:
+            1. `image_file`:
+                Either of three options:\n
+                    a. (int) Image data after being read with cv2.imread()\n
+                    b. File path of locally stored image file.\n
+                    c. Byte stream being received over multipart network reqeust.\n\n
+            2. `flag`:
+                Used to denote the type of image_file parameter being passed.
+                Possible values are IMG_DATA, FILE_READ, NETWORK_BYTE_STREAM respectively.
+                By default its value is IMAGE_DATA, and assumes imread() image is passed.
 
+        Returns:
+            String with list of detected points of blushs.
+
+        Error:
+            Returns `None` if face not found in image.
+
+        """
+        
+        landmarks = self.get_face_data(image_file, flag)
+        if landmarks is None:
+            return None
+        blushs = []
+        for point in landmarks[48]:
+            blushs = [*blushs, np.asarray(point).reshape(-1)]
+        for point in landmarks[0:3]:
+            blushs = [*blushs, np.asarray(point).reshape(-1)]
+        for point in landmarks[31]:
+            blushs = [*blushs, np.asarray(point).reshape(-1)]
+        for point in landmarks[48]:
+            blushs = [*blushs, np.asarray(point).reshape(-1)]
+        
+        xc = 0
+        yc = 0
+        
+        for point in blushs:
+            xc += point[0]
+            yc += point[1]
+        
+        xc = xc / len(blushs)
+        yc = yc / len(blushs)
+        
+        for point in blushs:
+            point[0] = (xc + point[0]) * 0.5
+            point[1] = (yc + point[1]) * 0.5
+        
+        blushs = np.asmatrix(blushs)
+        
+        return np.asarray(blushs[0:6, 1]).reshape(-1), np.asarray(blushs[0:6, 0]).reshape(-1)
+
+    def get_blushs_left(self, image_file, flag=None):
+        """
+        Returns points for blushs in given image.
+        _______________________________________
+        Args:
+            1. `image_file`:
+                Either of three options:\n
+                    a. (int) Image data after being read with cv2.imread()\n
+                    b. File path of locally stored image file.\n
+                    c. Byte stream being received over multipart network reqeust.\n\n
+            2. `flag`:
+                Used to denote the type of image_file parameter being passed.
+                Possible values are IMG_DATA, FILE_READ, NETWORK_BYTE_STREAM respectively.
+                By default its value is IMAGE_DATA, and assumes imread() image is passed.
+
+        Returns:
+            String with list of detected points of blushs.
+
+        Error:
+            Returns `None` if face not found in image.
+
+        """
+        landmarks = self.get_face_data(image_file, flag)
+        if landmarks is None:
+            return None
+        blushs = []
+        for point in landmarks[54]:
+            blushs = [*blushs, np.asarray(point).reshape(-1)]
+        for point in landmarks[13:16]:
+            blushs = [*blushs, np.asarray(point).reshape(-1)]
+        for point in landmarks[35]:
+            blushs = [*blushs, np.asarray(point).reshape(-1)]
+        for point in landmarks[54]:
+            blushs = [*blushs, np.asarray(point).reshape(-1)]
+            
+        xc = 0
+        yc = 0
+        
+        for point in blushs:
+            xc += point[0]
+            yc += point[1]
+        
+        xc = xc / len(blushs)
+        yc = yc / len(blushs)
+        
+        for point in blushs:
+            point[0] = (xc + point[0]) * 0.5
+            point[1] = (yc + point[1]) * 0.5
+              
+        blushs = np.asmatrix(blushs)
+            
+        return np.asarray(blushs[0:6, 1]).reshape(-1), np.asarray(blushs[0:6, 0]).reshape(-1)
+        
 
     def get_upper_eyelids(self, image_file, flag=None):
         """
@@ -203,9 +311,15 @@ class ApplyMakeup(DetectLandmarks):
         self.red_l = 0
         self.green_l = 0
         self.blue_l = 0
+        
         self.red_e = 0
         self.green_e = 0
         self.blue_e = 0
+        
+        self.red_b = 0
+        self.green_b = 0
+        self.blue_b = 0
+        
         self.debug = 0
         self.image = 0
         self.width = 0
@@ -417,6 +531,13 @@ class ApplyMakeup(DetectLandmarks):
         lil_curve = self.__draw_curve(lil)
         return uol_curve, uil_curve, lol_curve, lil_curve
 
+    def __get_curves_blushs(self, uol, uil, lol, lil):
+        """ Get the outlines of the lips. """
+        uol_curve = self.__draw_curve(uol)
+        uil_curve = self.__draw_curve(uil)
+        lol_curve = self.__draw_curve(lol)
+        lil_curve = self.__draw_curve(lil)
+        return uol_curve, uil_curve, lol_curve, lil_curve
 
     def __fill_color(self, uol_c, uil_c, lol_c, lil_c):
         """ Fill colour in lips. """
@@ -469,7 +590,106 @@ class ApplyMakeup(DetectLandmarks):
         cv2.imwrite(file_name, self.im_copy)
         return file_name
 
+    def apply_blush(self, filename, rblush, gblush, bblush):
+        self.red_b = rblush
+        self.green_b = gblush
+        self.blue_b = bblush
+        self.__read_image(filename)
+        
+        blush_rigth_x, blush_rigth_y = self.get_blushs_right(self.image)
+        blush_left_x, blush_left_y = self.get_blushs_left(self.image)
+        
+        blush_left_x, blush_left_y = self.get_boundary_points(blush_left_x, blush_left_y)
+        blush_rigth_x, blush_rigth_y = self.get_boundary_points(blush_rigth_x, blush_rigth_y)
+        blush_left_x, blush_left_y = self.get_interior_points(blush_left_x, blush_left_y)
+        blush_rigth_x, blush_rigth_y = self.get_interior_points(blush_rigth_x, blush_rigth_y)
+        
+        self.apply_blush_color(rblush, gblush, bblush)
+        self.smoothen_blush(blush_left_x, blush_left_y)
+        self.smoothen_blush(blush_rigth_x, blush_rigth_y)
 
+
+
+        self.im_copy = cv2.cvtColor(self.im_copy, cv2.COLOR_BGR2RGB)
+        name = '_color_' + str(self.red_b) + '_' + str(self.green_b) + '_' + str(self.blue_b)
+        file_name = 'output_' + name + '.jpg'
+        cv2.imwrite(file_name, self.im_copy)
+        return file_name
+        
+    def get_boundary_points(self, x, y):
+        print("get_boundary_points:", x, y)
+        tck, u = interpolate.splprep([x, y], s=0, per=1)
+        unew = np.linspace(u.min(), u.max(), 1000)
+        xnew, ynew = interpolate.splev(unew, tck, der=0)
+        tup = c_[xnew.astype(int), ynew.astype(int)].tolist()
+        coord = list(set(tuple(map(tuple, tup))))
+        coord = np.array([list(elem) for elem in coord])
+        return np.array(coord[:, 0], dtype=np.int32), np.array(coord[:, 1], dtype=np.int32)
+
+
+    def get_interior_points(self, x, y):
+        intx = []
+        inty = []
+
+        def ext(a, b, i):
+            a, b = round(a), round(b)
+            intx.extend(arange(a, b, 1).tolist())
+            inty.extend((ones(b - a) * i).tolist())
+
+        x, y = np.array(x), np.array(y)
+        xmin, xmax = amin(x), amax(x)
+        xrang = np.arange(xmin, xmax + 1, 1)
+        for i in xrang:
+            ylist = y[where(x == i)]
+            ext(amin(ylist), amax(ylist), i)
+        return np.array(intx, dtype=np.int32), np.array(inty, dtype=np.int32)
+
+
+    def apply_blush_color(self, r, g, b):
+        val = color.rgb2lab((self.image / 255.)).reshape(self.width * self.height, 3)
+        L, A, B = mean(val[:, 0]), mean(val[:, 1]), mean(val[:, 2])
+        L1, A1, B1 = color.rgb2lab(np.array((r / 255., g / 255., b / 255.)).reshape(1, 1, 3)).reshape(3, )
+        ll, aa, bb = (L1 - L) * intensivity, (A1 - A) * intensivity, (B1 - B) * intensivity
+        val[:, 0] = np.clip(val[:, 0] + ll, 0, 100)
+        val[:, 1] = np.clip(val[:, 1] + aa, -127, 128)
+        val[:, 2] = np.clip(val[:, 2] + bb, -127, 128)
+        self.image = color.lab2rgb(val.reshape(self.height, self.width, 3)) * 255
+
+
+    def smoothen_blush(self, x, y):
+        imgBase = zeros((self.height, self.width))
+        cv2.fillConvexPoly(imgBase, np.array(c_[x, y], dtype='int32'), 1)
+        imgMask = cv2.GaussianBlur(imgBase, (201, 201), 0)
+        imgBlur3D = np.ndarray([self.height, self.width, 3], dtype='float')
+        imgBlur3D[:, :, 0] = imgMask
+        imgBlur3D[:, :, 1] = imgMask
+        imgBlur3D[:, :, 2] = imgMask
+        self.im_copy = (imgBlur3D * self.image + (1 - imgBlur3D) * self.im_copy).astype('uint8')
+        
+    def apply_blush(self, filename, rblush, gblush, bblush):
+        self.red_b = rblush
+        self.green_b = gblush
+        self.blue_b = bblush
+        self.__read_image(filename)
+        
+        blush_rigth_x, blush_rigth_y = self.get_blushs_right(self.image)
+        blush_left_x, blush_left_y = self.get_blushs_left(self.image)
+        
+        blush_left_x, blush_left_y = self.get_boundary_points(blush_left_x, blush_left_y)
+        blush_rigth_x, blush_rigth_y = self.get_boundary_points(blush_rigth_x, blush_rigth_y)
+        blush_left_x, blush_left_y = self.get_interior_points(blush_left_x, blush_left_y)
+        blush_rigth_x, blush_rigth_y = self.get_interior_points(blush_rigth_x, blush_rigth_y)
+        
+        self.apply_blush_color(rblush, gblush, bblush)
+        self.smoothen_blush(blush_left_x, blush_left_y)
+        self.smoothen_blush(blush_rigth_x, blush_rigth_y)
+
+        self.im_copy = cv2.cvtColor(self.im_copy, cv2.COLOR_BGR2RGB)
+        name = '_color_' + str(self.red_b) + '_' + str(self.green_b) + '_' + str(self.blue_b)
+        file_name = 'output_' + name + '.jpg'
+        cv2.imwrite(file_name, self.im_copy)
+        return file_name
+        
     def apply_liner(self, filename):
         """
         Applies lipstick on an input image.

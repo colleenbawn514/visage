@@ -28,43 +28,43 @@ def callback_handler(call):
         bot.send_message(chat_id, 'Соединение разорвано, напишите /start для перезагрузки')
         return
     
-    if call.data == 'lipcstik_r255_g0_b0':
+    elif call.data == 'lipcstik_r255_g0_b0':
         user[chat_id]['lipstick_color'] = { 'r': 255, 'g': 0 , 'b': 0 }
         user[chat_id]['use_lipstick'] = True    
         bot.edit_message_text('Цвет губ: красный', chat_id, call.message.id)
         choose_liner(chat_id)
 
-    if call.data == 'lipcstik_r138_g14_b34':
+    elif call.data == 'lipcstik_r138_g14_b34':
         user[chat_id]['lipstick_color'] = { 'r': 138, 'g': 14 , 'b': 34 }
         user[chat_id]['use_lipstick'] = True    
         bot.edit_message_text('Цвет губ: бордовый', chat_id, call.message.id)
         choose_liner(chat_id)
 
-    if call.data == 'lipcstik_r227_g14_b110':
+    elif call.data == 'lipcstik_r227_g14_b110':
         user[chat_id]['lipstick_color'] = { 'r': 227, 'g': 14 , 'b': 110 }
         user[chat_id]['use_lipstick'] = True    
         bot.edit_message_text('Цвет губ: розовый', chat_id, call.message.id)
         choose_liner(chat_id)
 
-    if call.data == 'lipcstik_r117_g39_b31':
+    elif call.data == 'lipcstik_r117_g39_b31':
         user[chat_id]['lipstick_color'] = { 'r': 117, 'g': 39 , 'b': 31 }
         user[chat_id]['use_lipstick'] = True    
         bot.edit_message_text('Цвет губ: темно-красный', chat_id, call.message.id)
         choose_liner(chat_id)
 
-    if call.data == 'lipcstik_r255_g20_b147':
+    elif call.data == 'lipcstik_r255_g20_b147':
         user[chat_id]['lipstick_color'] = { 'r': 255, 'g': 20 , 'b': 147 }
         user[chat_id]['use_lipstick'] = True    
         bot.edit_message_text('Цвет губ: ярко-розовый', chat_id, call.message.id)
         choose_liner(chat_id)
         
-    if call.data == 'lipcstik_r255_g99_b71':
+    elif call.data == 'lipcstik_r255_g99_b71':
         user[chat_id]['lipstick_color'] = { 'r': 255, 'g': 99 , 'b': 71 }
         user[chat_id]['use_lipstick'] = True    
         bot.edit_message_text('Цвет губ: томатный', chat_id, call.message.id)
         choose_liner(chat_id)
 
-    if call.data == 'lipcstik_r75_g0_b130':
+    elif call.data == 'lipcstik_r75_g0_b130':
         user[chat_id]['lipstick_color'] = { 'r': 75, 'g': 0 , 'b': 130 }
         user[chat_id]['use_lipstick'] = True    
         bot.edit_message_text('Цвет губ: индиго', chat_id, call.message.id)
@@ -74,15 +74,48 @@ def callback_handler(call):
         user[chat_id]['lipstick_color'] = None
         user[chat_id]['use_lipstick'] = False  
         bot.edit_message_text('Без губной помады', chat_id, call.message.id)
-        choose_liner(chat_id)    
+        choose_liner(chat_id) 
+       
     elif call.data == 'liner_on':
         user[chat_id]['use_liner'] = True  
         bot.edit_message_text('Использовать лайнер', chat_id, call.message.id)
-        processing(chat_id)
+        choose_blush(chat_id) 
+
     elif call.data == 'liner_off':
         user[chat_id]['use_liner'] = False  
         bot.edit_message_text('Без лайнера', chat_id, call.message.id)
+        choose_blush(chat_id) 
+
+    elif call.data == 'blush_r162_g59_b108':
+        user[chat_id]['blush_color'] = { 'r': 162, 'g': 59 , 'b': 108 }
+        user[chat_id]['use_blush'] = True    
+        bot.edit_message_text('Цвет румян: фиолетовый', chat_id, call.message.id)
         processing(chat_id)
+    
+    elif call.data == 'blush_r250_g218_b221':
+        user[chat_id]['blush_color'] = { 'r': 250, 'g': 218 , 'b': 221 }
+        user[chat_id]['use_blush'] = True    
+        bot.edit_message_text('Цвет румян: розовый', chat_id, call.message.id)
+        processing(chat_id)
+        
+    elif call.data == 'blush_r205_g92_b92':
+        user[chat_id]['blush_color'] = { 'r': 205, 'g': 92 , 'b': 92 }
+        user[chat_id]['use_blush'] = True    
+        bot.edit_message_text('Цвет румян: красный', chat_id, call.message.id)
+        processing(chat_id)
+        
+    elif call.data == 'blush_r150_g75_b0':
+        user[chat_id]['blush_color'] = { 'r': 150, 'g': 75 , 'b': 0 }
+        user[chat_id]['use_blush'] = True    
+        bot.edit_message_text('Цвет румян: коричневый', chat_id, call.message.id)
+        processing(chat_id)
+
+    elif call.data == 'blush_off':
+        user[chat_id]['blush_color'] = None
+        user[chat_id]['use_blush'] = False   
+        bot.edit_message_text('Без румян', chat_id, call.message.id)
+        processing(chat_id)
+
     elif call.data == 'add_photo':
         bot.edit_message_text('Фото получено. Отправьте ещё фото', chat_id, call.message.id)
         bot.register_next_step_handler(call.message, handle_docs_photo)
@@ -136,7 +169,9 @@ def start(message):
             'photo_messages': [],
             'use_lipstick': False,
             'use_liner': False,
+            'use_blush': False,
             'lipstick_color': None,
+            'blush_color': None,
         }
         bot.send_message(
             message.from_user.id, 
@@ -223,14 +258,32 @@ def choose_lipstik(chat_id):
         {"Без помады": "lipstick_off"},
     ]
     
-    kb_lipstck_colors = keyboa_maker(items=lipstik_colors_with_ids, items_in_row=3)
+    kb_lipstick_colors = keyboa_maker(items=lipstik_colors_with_ids, items_in_row=3)
 
     bot.send_message(
         chat_id,
-        reply_markup = kb_lipstck_colors,
-        text = 'Выберете цвет губ:'
+        reply_markup = kb_lipstick_colors,
+        text = 'Выберите цвет губ:'
     )
+
+def choose_blush(chat_id):
+    blush_colors_with_ids = [
+        {"Фиолетовый": "blush_r162_g59_b108"},
+        {"Розовый": "blush_r250_g218_b221"},
+        {"Красный": "blush_r205_g92_b92"},
+        {"Коричневый": "blush_r150_g75_b0"},
+                         
+        {"Без румян": "blush_off"},
+    ]
     
+    kb_blush_colors = keyboa_maker(items=blush_colors_with_ids, items_in_row=2)
+
+    bot.send_message(
+        chat_id,
+        reply_markup = kb_blush_colors,
+        text = 'Выберите цвет румян:'
+    )
+
 def choose_liner(chat_id):
     liner_with_ids = [
         {"Да": "liner_on"},
@@ -246,7 +299,7 @@ def choose_liner(chat_id):
     )
     
 def processing(chat_id):
-    bot.send_message(chat_id, 'Обработка фотографиий... Это может занять какое то время')
+    bot.send_message(chat_id, 'Обработка фотографий... Это может занять какое то время')
     
     for i in range(len(user[chat_id]['source_images'])):
         try:
@@ -259,7 +312,7 @@ def processing(chat_id):
             traceback.print_exc()
             bot.reply_to(user[chat_id]['photo_messages'][i], 'Не нашли тут лицо')
             
-    bot.send_message(chat_id, 'Все фото обработан, вы так прекрасы 🥰. Напишите /go что бы обработать ещё фото')
+    bot.send_message(chat_id, 'Все фото обработаны, вы так прекрасы 🥰. Напишите /go что бы обработать ещё фото')
     clear_content(chat_id)
     
 def check_photo(image_path):
@@ -281,7 +334,13 @@ def photo_processing(image_path, options):
         )
     if options['use_liner']:
         result_src = makeup.apply_liner(result_src)
-    
+    if options['use_blush']:
+        result_src = makeup.apply_blush(
+            result_src,
+            options['blush_color']['r'],
+            options['blush_color']['g'],
+            options['blush_color']['b'],
+        )
     return result_src
 
 #очищение папки с фото
