@@ -1,9 +1,9 @@
-
 from PIL import Image, ImageEnhance
 import telebot
 import os
 import time
 import traceback
+import time
 from keyboa import keyboa_maker
 from visage import ApplyMakeup
 #from visage import flag
@@ -76,14 +76,58 @@ def callback_handler(call):
         bot.edit_message_text('Без губной помады', chat_id, call.message.id)
         choose_liner(chat_id) 
        
+       
     elif call.data == 'liner_on':
         user[chat_id]['use_liner'] = True  
         bot.edit_message_text('Использовать лайнер', chat_id, call.message.id)
-        choose_blush(chat_id) 
+        choose_eyeshadow(chat_id) 
 
     elif call.data == 'liner_off':
         user[chat_id]['use_liner'] = False  
         bot.edit_message_text('Без лайнера', chat_id, call.message.id)
+        choose_eyeshadow(chat_id) 
+        
+        
+    elif call.data == 'eyeshadow_r251_g56_b107':
+        user[chat_id]['eyeshadow_color'] = { 'r': 251, 'g': 56 , 'b': 107 }
+        user[chat_id]['use_eyeshadow'] = True    
+        bot.edit_message_text('Цвет теней: розовый', chat_id, call.message.id)
+        choose_blush(chat_id) 
+        
+    elif call.data == 'eyeshadow_r55_g126_b250':
+        user[chat_id]['eyeshadow_color'] = { 'r': 55, 'g': 126 , 'b': 250 }
+        user[chat_id]['use_eyeshadow'] = True    
+        bot.edit_message_text('Цвет теней: голубой', chat_id, call.message.id)
+        choose_blush(chat_id) 
+
+    elif call.data == 'eyeshadow_r144_g63_b250':
+        user[chat_id]['eyeshadow_color'] = { 'r': 144, 'g': 63 , 'b': 250 }
+        user[chat_id]['use_eyeshadow'] = True    
+        bot.edit_message_text('Цвет теней: фиолетовый', chat_id, call.message.id)
+        choose_blush(chat_id) 
+
+    elif call.data == 'eyeshadow_r250_g138_b75':
+        user[chat_id]['eyeshadow_color'] = { 'r': 250, 'g': 138 , 'b': 75 }
+        user[chat_id]['use_eyeshadow'] = True    
+        bot.edit_message_text('Цвет теней: оранжевый', chat_id, call.message.id)
+        choose_blush(chat_id)
+
+    elif call.data == 'eyeshadow_r98_g224_b75':
+        user[chat_id]['eyeshadow_color'] = { 'r': 98, 'g': 224 , 'b': 75 }
+        user[chat_id]['use_eyeshadow'] = True    
+        bot.edit_message_text('Цвет теней: зеленый', chat_id, call.message.id)
+        choose_blush(chat_id) 
+
+    elif call.data == 'eyeshadow_r222_g17_b7':
+        user[chat_id]['eyeshadow_color'] = { 'r': 222, 'g': 17 , 'b': 7 }
+        user[chat_id]['use_eyeshadow'] = True    
+        bot.edit_message_text('Цвет теней: красный', chat_id, call.message.id)
+        choose_blush(chat_id) 
+
+    elif call.data == 'eyeshadow_off':
+        user[chat_id]['eyeshadow_color'] = None
+        user[chat_id]['use_eyeshadow'] = False    
+        bot.edit_message_text('Без теней', chat_id, call.message.id)
         choose_blush(chat_id) 
 
     elif call.data == 'blush_r162_g59_b108':
@@ -226,9 +270,7 @@ def handle_docs_photo(message):
         user[chat_id]['source_images'].append(src)
         user[chat_id]['photo_messages'].append(message)
         
-        # reply_img = photo_processing(src)
-        # images[str(message.chat.id)].append(reply_img)
-        # bot.send_photo(message.chat.id, open(reply_img, 'rb'))
+
     except Exception as e:
         traceback.print_exc()
         if processing_info_message is not None:
@@ -283,7 +325,26 @@ def choose_blush(chat_id):
         reply_markup = kb_blush_colors,
         text = 'Выберите цвет румян:'
     )
+def choose_eyeshadow(chat_id): 
+    eyeshadow_colors_with_ids = [
+        {"Розовый": "eyeshadow_r251_g56_b107"},
+        {"Голубой": "eyeshadow_r55_g126_b250"},
+        {"Фиолетовый": "eyeshadow_r144_g63_b250"},
+        {"Оранжевый": "eyeshadow_r250_g138_b75"},
+        {"Зеленый": "eyeshadow_r98_g224_b75"},
+        {"Красный": "eyeshadow_r222_g17_b7"},
+        
+        {"Без теней": "eyeshadow_off"},
+    ]
+    
+    kb_eyeshadow_colors = keyboa_maker(items=eyeshadow_colors_with_ids, items_in_row=2)
 
+    bot.send_message(
+        chat_id,
+        reply_markup = kb_eyeshadow_colors,
+        text = 'Выберите цвет теней:'
+    )
+    
 def choose_liner(chat_id):
     liner_with_ids = [
         {"Да": "liner_on"},
@@ -303,15 +364,17 @@ def processing(chat_id):
     
     for i in range(len(user[chat_id]['source_images'])):
         try:
-            result_src = photo_processing(user[chat_id]['source_images'][i], user[chat_id])
-            print(result_src)
+            list_points = makeup.get_face_data(user[chat_id]['source_images'][i], 'FILE_READ')
+            start_time = time.time()
+            result_src = photo_processing(user[chat_id]['source_images'][i], user[chat_id], list_points)
+            print("Фото обработано за:")
+            print("--- %s seconds ---" % (time.time() - start_time))
             user[chat_id]['result_images'].append(result_src)
             photo = open(result_src, 'rb')
             bot.send_photo(chat_id, photo)
         except Exception as e:
             traceback.print_exc()
             bot.reply_to(user[chat_id]['photo_messages'][i], 'Не нашли тут лицо')
-            
     bot.send_message(chat_id, 'Все фото обработаны, вы так прекрасы 🥰. Напишите /go что бы обработать ещё фото')
     clear_content(chat_id)
     
@@ -322,24 +385,34 @@ def check_photo(image_path):
     return list_points is not None
     
 #обработка фото
-def photo_processing(image_path, options):
+def photo_processing(image_path, options, list_points):
     result_src = image_path
     
     if options['use_lipstick']:
         result_src = makeup.apply_lipstick(
             result_src,
+            list_points,
             options['lipstick_color']['r'],
             options['lipstick_color']['g'],
             options['lipstick_color']['b'],
         )
     if options['use_liner']:
-        result_src = makeup.apply_liner(result_src)
+        result_src = makeup.apply_liner(result_src, list_points)
     if options['use_blush']:
         result_src = makeup.apply_blush(
             result_src,
+            list_points,
             options['blush_color']['r'],
             options['blush_color']['g'],
             options['blush_color']['b'],
+        )
+    if options['use_eyeshadow']:
+        result_src = makeup.apply_eyeshadow(
+            result_src,
+            list_points,
+            options['eyeshadow_color']['r'],
+            options['eyeshadow_color']['g'],
+            options['eyeshadow_color']['b'],
         )
     return result_src
 

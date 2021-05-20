@@ -124,7 +124,7 @@ class DetectLandmarks(object):
 
 
 
-    def get_lips(self, image_file, flag=None):
+    def get_lips(self, image_file, list_points, flag=None):
         """
         Returns points for lips in given image.
         _______________________________________
@@ -146,7 +146,7 @@ class DetectLandmarks(object):
             Returns `None` if face not found in image.
 
         """
-        landmarks = self.get_face_data(image_file, flag)
+        landmarks = list_points
         if landmarks is None:
             return None
         lips = ""
@@ -154,7 +154,7 @@ class DetectLandmarks(object):
             lips += str(point).replace('[', '').replace(']', '') + '\n'
         return lips
 
-    def get_blushs_right(self, image_file, flag=None):
+    def get_blushs_right(self, image_file, list_points, flag=None):
         """
         Returns points for blushs in given image.
         _______________________________________
@@ -177,7 +177,7 @@ class DetectLandmarks(object):
 
         """
         
-        landmarks = self.get_face_data(image_file, flag)
+        landmarks = list_points
         if landmarks is None:
             return None
         blushs = []
@@ -208,7 +208,7 @@ class DetectLandmarks(object):
         
         return np.asarray(blushs[0:6, 1]).reshape(-1), np.asarray(blushs[0:6, 0]).reshape(-1)
 
-    def get_blushs_left(self, image_file, flag=None):
+    def get_blushs_left(self, image_file, list_points, flag=None):
         """
         Returns points for blushs in given image.
         _______________________________________
@@ -230,7 +230,7 @@ class DetectLandmarks(object):
             Returns `None` if face not found in image.
 
         """
-        landmarks = self.get_face_data(image_file, flag)
+        landmarks = list_points
         if landmarks is None:
             return None
         blushs = []
@@ -261,8 +261,94 @@ class DetectLandmarks(object):
             
         return np.asarray(blushs[0:6, 1]).reshape(-1), np.asarray(blushs[0:6, 0]).reshape(-1)
         
+    def get_eyeshadows_right(self, image_file, list_points, flag=None):
+        """
+        Returns points for eyeshadows in given image.
+        _______________________________________
+        Args:
+            1. `image_file`:
+                Either of three options:\n
+                    a. (int) Image data after being read with cv2.imread()\n
+                    b. File path of locally stored image file.\n
+                    c. Byte stream being received over multipart network reqeust.\n\n
+            2. `flag`:
+                Used to denote the type of image_file parameter being passed.
+                Possible values are IMG_DATA, FILE_READ, NETWORK_BYTE_STREAM respectively.
+                By default its value is IMAGE_DATA, and assumes imread() image is passed.
 
-    def get_upper_eyelids(self, image_file, flag=None):
+        Returns:
+            String with list of detected points of eyeshadows.
+
+        Error:
+            Returns `None` if face not found in image.
+
+        """
+        
+        landmarks = list_points
+        if landmarks is None:
+            return None
+        eyeshadows = []
+        for point in landmarks[18:21]:
+            eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
+        for point in landmarks[39]:
+            eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
+        for point in landmarks[38]:
+            eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
+        for point in landmarks[37]:
+            eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
+        for point in landmarks[36]:
+            eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
+        for point in landmarks[18]:
+            eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
+ 
+        eyeshadows = np.asmatrix(eyeshadows)
+        
+        return np.asarray(eyeshadows[0:8, 1]).reshape(-1), np.asarray(eyeshadows[0:8, 0]).reshape(-1)
+
+    def get_eyeshadows_left(self, image_file, list_points, flag=None):
+        """
+        Returns points for eyeshadows in given image.
+        _______________________________________
+        Args:
+            1. `image_file`:
+                Either of three options:\n
+                    a. (int) Image data after being read with cv2.imread()\n
+                    b. File path of locally stored image file.\n
+                    c. Byte stream being received over multipart network reqeust.\n\n
+            2. `flag`:
+                Used to denote the type of image_file parameter being passed.
+                Possible values are IMG_DATA, FILE_READ, NETWORK_BYTE_STREAM respectively.
+                By default its value is IMAGE_DATA, and assumes imread() image is passed.
+
+        Returns:
+            String with list of detected points of eyeshadows.
+
+        Error:
+            Returns `None` if face not found in image.
+
+        """
+        landmarks = list_points
+        if landmarks is None:
+            return None
+        eyeshadows = []
+        for point in landmarks[25]:
+            eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
+        for point in landmarks[24]:
+            eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
+        for point in landmarks[23]:
+            eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
+        for point in landmarks[22]:
+            eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
+        for point in landmarks[42:45]:
+            eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
+        for point in landmarks[25]:
+            eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
+            
+        eyeshadows = np.asmatrix(eyeshadows)
+            
+        return np.asarray(eyeshadows[0:8, 1]).reshape(-1), np.asarray(eyeshadows[0:8, 0]).reshape(-1)
+        
+    def get_upper_eyelids(self, image_file, list_points, flag=None):
         """
         Returns points for upper eyelids in given image.
         ________________________________________________
@@ -284,7 +370,7 @@ class DetectLandmarks(object):
             Returns `None` if face not found in image.
 
         """
-        landmarks = self.get_face_data(image_file, flag)
+        landmarks = list_points
         if landmarks is None:
             return None
         liner = ""
@@ -559,65 +645,7 @@ class ApplyMakeup(DetectLandmarks):
         self.__draw_liner(right_eye, 'right')
 
 
-    def apply_lipstick(self, filename, rlips, glips, blips):
-        """
-        Applies lipstick on an input image.
-        ___________________________________
-        Args:
-            1. `filename (str)`: Path for stored input image file.
-            2. `red (int)`: Red value of RGB colour code of lipstick shade.
-            3. `blue (int)`: Blue value of RGB colour code of lipstick shade.
-            4. `green (int)`: Green value of RGB colour code of lipstick shade.
-
-        Returns:
-            `filepath (str)` of the saved output file, with applied lipstick.
-
-        """
-
-        self.red_l = rlips
-        self.green_l = glips
-        self.blue_l = blips
-        self.__read_image(filename)
-        lips = self.get_lips(self.image)
-        lips = list([point.split() for point in lips.split('\n')])
-        lips_points = [item for sublist in lips for item in sublist]
-        uol, uil, lol, lil = self.__get_points_lips(lips_points)
-        uol_c, uil_c, lol_c, lil_c = self.__get_curves_lips(uol, uil, lol, lil)
-        self.__fill_color(uol_c, uil_c, lol_c, lil_c)
-        self.im_copy = cv2.cvtColor(self.im_copy, cv2.COLOR_BGR2RGB)
-        name = 'color_' + str(self.red_l) + '_' + str(self.green_l) + '_' + str(self.blue_l)
-        file_name = 'output_' + name + '.jpg'
-        cv2.imwrite(file_name, self.im_copy)
-        return file_name
-
-    def apply_blush(self, filename, rblush, gblush, bblush):
-        self.red_b = rblush
-        self.green_b = gblush
-        self.blue_b = bblush
-        self.__read_image(filename)
-        
-        blush_rigth_x, blush_rigth_y = self.get_blushs_right(self.image)
-        blush_left_x, blush_left_y = self.get_blushs_left(self.image)
-        
-        blush_left_x, blush_left_y = self.get_boundary_points(blush_left_x, blush_left_y)
-        blush_rigth_x, blush_rigth_y = self.get_boundary_points(blush_rigth_x, blush_rigth_y)
-        blush_left_x, blush_left_y = self.get_interior_points(blush_left_x, blush_left_y)
-        blush_rigth_x, blush_rigth_y = self.get_interior_points(blush_rigth_x, blush_rigth_y)
-        
-        self.apply_blush_color(rblush, gblush, bblush)
-        self.smoothen_blush(blush_left_x, blush_left_y)
-        self.smoothen_blush(blush_rigth_x, blush_rigth_y)
-
-
-
-        self.im_copy = cv2.cvtColor(self.im_copy, cv2.COLOR_BGR2RGB)
-        name = '_color_' + str(self.red_b) + '_' + str(self.green_b) + '_' + str(self.blue_b)
-        file_name = 'output_' + name + '.jpg'
-        cv2.imwrite(file_name, self.im_copy)
-        return file_name
-        
     def get_boundary_points(self, x, y):
-        print("get_boundary_points:", x, y)
         tck, u = interpolate.splprep([x, y], s=0, per=1)
         unew = np.linspace(u.min(), u.max(), 1000)
         xnew, ynew = interpolate.splev(unew, tck, der=0)
@@ -655,6 +683,15 @@ class ApplyMakeup(DetectLandmarks):
         val[:, 2] = np.clip(val[:, 2] + bb, -127, 128)
         self.image = color.lab2rgb(val.reshape(self.height, self.width, 3)) * 255
 
+    def apply_eyeshadow_color(self, r, g, b):
+        val = color.rgb2lab((self.image / 255.)).reshape(self.width * self.height, 3)
+        L, A, B = mean(val[:, 0]), mean(val[:, 1]), mean(val[:, 2])
+        L1, A1, B1 = color.rgb2lab(np.array((r / 255., g / 255., b / 255.)).reshape(1, 1, 3)).reshape(3, )
+        ll, aa, bb = (L1 - L) * 0.5, (A1 - A) * 0.5, (B1 - B) * 0.5
+        val[:, 0] = np.clip(val[:, 0] + ll, 0, 100)
+        val[:, 1] = np.clip(val[:, 1] + aa, -127, 128)
+        val[:, 2] = np.clip(val[:, 2] + bb, -127, 128)
+        self.image = color.lab2rgb(val.reshape(self.height, self.width, 3)) * 255
 
     def smoothen_blush(self, x, y):
         imgBase = zeros((self.height, self.width))
@@ -665,15 +702,49 @@ class ApplyMakeup(DetectLandmarks):
         imgBlur3D[:, :, 1] = imgMask
         imgBlur3D[:, :, 2] = imgMask
         self.im_copy = (imgBlur3D * self.image + (1 - imgBlur3D) * self.im_copy).astype('uint8')
+
+    def smoothen_eyeshadow(self, x, y):
+        imgBase = zeros((self.height, self.width))
+        cv2.fillConvexPoly(imgBase, np.array(c_[x, y], dtype='int32'), 1)
+        imgMask = cv2.GaussianBlur(imgBase, (51, 51), 0)
+        imgBlur3D = np.ndarray([self.height, self.width, 3], dtype='float')
+        imgBlur3D[:, :, 0] = imgMask
+        imgBlur3D[:, :, 1] = imgMask
+        imgBlur3D[:, :, 2] = imgMask
+        self.im_copy = (imgBlur3D * self.image + (1 - imgBlur3D) * self.im_copy).astype('uint8')
         
-    def apply_blush(self, filename, rblush, gblush, bblush):
+    def apply_eyeshadow(self, filename, list_points, reyeshadow, geyeshadow, beyeshadow):
+        self.red_eye = reyeshadow
+        self.green_eye = geyeshadow
+        self.blue_eye = beyeshadow
+        self.__read_image(filename)
+        
+        eyeshadow_rigth_x, eyeshadow_rigth_y = self.get_eyeshadows_right(self.image, list_points)
+        eyeshadow_left_x, eyeshadow_left_y = self.get_eyeshadows_left(self.image, list_points)
+        
+        eyeshadow_left_x, eyeshadow_left_y = self.get_boundary_points(eyeshadow_left_x, eyeshadow_left_y)
+        eyeshadow_rigth_x, eyeshadow_rigth_y = self.get_boundary_points(eyeshadow_rigth_x, eyeshadow_rigth_y)
+        eyeshadow_left_x, eyeshadow_left_y = self.get_interior_points(eyeshadow_left_x, eyeshadow_left_y)
+        eyeshadow_rigth_x, eyeshadow_rigth_y = self.get_interior_points(eyeshadow_rigth_x, eyeshadow_rigth_y)
+        
+        self.apply_eyeshadow_color(reyeshadow, geyeshadow, beyeshadow)
+        self.smoothen_eyeshadow(eyeshadow_left_x, eyeshadow_left_y)
+        self.smoothen_eyeshadow(eyeshadow_rigth_x, eyeshadow_rigth_y)
+
+        self.im_copy = cv2.cvtColor(self.im_copy, cv2.COLOR_BGR2RGB)
+        name = '_color_' + str(self.red_b) + '_' + str(self.green_b) + '_' + str(self.blue_b)
+        file_name = 'output_' + name + '.jpg'
+        cv2.imwrite(file_name, self.im_copy)
+        return file_name
+    
+    def apply_blush(self, filename, list_points, rblush, gblush, bblush):
         self.red_b = rblush
         self.green_b = gblush
         self.blue_b = bblush
         self.__read_image(filename)
         
-        blush_rigth_x, blush_rigth_y = self.get_blushs_right(self.image)
-        blush_left_x, blush_left_y = self.get_blushs_left(self.image)
+        blush_rigth_x, blush_rigth_y = self.get_blushs_right(self.image, list_points)
+        blush_left_x, blush_left_y = self.get_blushs_left(self.image, list_points)
         
         blush_left_x, blush_left_y = self.get_boundary_points(blush_left_x, blush_left_y)
         blush_rigth_x, blush_rigth_y = self.get_boundary_points(blush_rigth_x, blush_rigth_y)
@@ -690,7 +761,25 @@ class ApplyMakeup(DetectLandmarks):
         cv2.imwrite(file_name, self.im_copy)
         return file_name
         
-    def apply_liner(self, filename):
+    def apply_lipstick(self, filename, list_points, rlips, glips, blips):
+
+        self.red_l = rlips
+        self.green_l = glips
+        self.blue_l = blips
+        self.__read_image(filename)
+        lips = self.get_lips(self.image, list_points)
+        lips = list([point.split() for point in lips.split('\n')])
+        lips_points = [item for sublist in lips for item in sublist]
+        uol, uil, lol, lil = self.__get_points_lips(lips_points)
+        uol_c, uil_c, lol_c, lil_c = self.__get_curves_lips(uol, uil, lol, lil)
+        self.__fill_color(uol_c, uil_c, lol_c, lil_c)
+        self.im_copy = cv2.cvtColor(self.im_copy, cv2.COLOR_BGR2RGB)
+        name = 'color_' + str(self.red_l) + '_' + str(self.green_l) + '_' + str(self.blue_l)
+        file_name = 'output_' + name + '.jpg'
+        cv2.imwrite(file_name, self.im_copy)
+        return file_name
+
+    def apply_liner(self, filename, list_points):
         """
         Applies lipstick on an input image.
         ___________________________________
@@ -702,7 +791,7 @@ class ApplyMakeup(DetectLandmarks):
 
         """
         self.__read_image(filename)
-        liner = self.get_upper_eyelids(self.image)
+        liner = self.get_upper_eyelids(self.image, list_points)
         eyes_points = liner.split('\n\n')
         self.__create_eye_liner(eyes_points)
         self.im_copy = cv2.cvtColor(self.im_copy, cv2.COLOR_BGR2RGB)
