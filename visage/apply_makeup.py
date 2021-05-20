@@ -288,7 +288,7 @@ class DetectLandmarks(object):
         if landmarks is None:
             return None
         eyeshadows = []
-        for point in landmarks[18:21]:
+        for point in landmarks[17:21]:
             eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
         for point in landmarks[39]:
             eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
@@ -298,12 +298,13 @@ class DetectLandmarks(object):
             eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
         for point in landmarks[36]:
             eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
-        for point in landmarks[18]:
+        for point in landmarks[17]:
             eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
- 
+        
+
         eyeshadows = np.asmatrix(eyeshadows)
         
-        return np.asarray(eyeshadows[0:8, 1]).reshape(-1), np.asarray(eyeshadows[0:8, 0]).reshape(-1)
+        return np.asarray(eyeshadows[0:9, 1]).reshape(-1), np.asarray(eyeshadows[0:9, 0]).reshape(-1)
 
     def get_eyeshadows_left(self, image_file, list_points, flag=None):
         """
@@ -331,6 +332,8 @@ class DetectLandmarks(object):
         if landmarks is None:
             return None
         eyeshadows = []
+        for point in landmarks[26]:
+            eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
         for point in landmarks[25]:
             eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
         for point in landmarks[24]:
@@ -341,12 +344,13 @@ class DetectLandmarks(object):
             eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
         for point in landmarks[42:45]:
             eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
-        for point in landmarks[25]:
+        for point in landmarks[26]:
             eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
-            
+
+
         eyeshadows = np.asmatrix(eyeshadows)
             
-        return np.asarray(eyeshadows[0:8, 1]).reshape(-1), np.asarray(eyeshadows[0:8, 0]).reshape(-1)
+        return np.asarray(eyeshadows[0:9, 1]).reshape(-1), np.asarray(eyeshadows[0:9, 0]).reshape(-1)
         
     def get_upper_eyelids(self, image_file, list_points, flag=None):
         """
