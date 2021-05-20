@@ -374,8 +374,11 @@ def processing(chat_id):
             bot.send_photo(chat_id, photo)
         except Exception as e:
             traceback.print_exc()
-            bot.reply_to(user[chat_id]['photo_messages'][i], 'Не нашли тут лицо')
-    bot.send_message(chat_id, 'Все фото обработаны, вы так прекрасы 🥰. Напишите /go что бы обработать ещё фото')
+            bot.reply_to(user[chat_id]['photo_messages'][i], 'Не удалось обработать эту фотографию(')
+    bot.send_message(
+        chat_id,
+        'Все фото обработаны, вы так прекрасы 🥰. Напишите /go что бы обработать ещё фото',
+    )
     clear_content(chat_id)
     
 def check_photo(image_path):

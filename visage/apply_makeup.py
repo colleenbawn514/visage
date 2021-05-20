@@ -21,7 +21,9 @@ from skimage import color
 
 PREDICTOR_PATH = "shape_predictor_68_face_landmarks.dat"
 CASC_PATH = "haarcascade_frontalface_default.xml"
-intensivity = 0.5
+BLUSH_INTENSIVITY = 0.5
+EYESHADOWN_INTENSIVITY = 0.4
+LIPS_INTENSIVITY = 0.3
 
 class DetectLandmarks(object):
     """
@@ -261,6 +263,11 @@ class DetectLandmarks(object):
             
         return np.asarray(blushs[0:6, 1]).reshape(-1), np.asarray(blushs[0:6, 0]).reshape(-1)
         
+        
+    def offsetPoint(self, point, target, force):      
+        point[0] = target[0] * force + point[0] * (1 - force)
+        point[1] = target[1] * force + point[1] * (1 - force)
+        
     def get_eyeshadows_right(self, image_file, list_points, flag=None):
         """
         Returns points for eyeshadows in given image.
@@ -299,8 +306,15 @@ class DetectLandmarks(object):
         for point in landmarks[36]:
             eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
         for point in landmarks[17]:
-            eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
-        
+            eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]      
+                  
+            
+        self.offsetPoint(eyeshadows[0], eyeshadows[8], 0.3)
+        self.offsetPoint(eyeshadows[1], eyeshadows[8], 0.3)
+        self.offsetPoint(eyeshadows[2], eyeshadows[7], 0.3)
+        self.offsetPoint(eyeshadows[3], eyeshadows[6], 0.3)
+        self.offsetPoint(eyeshadows[4], eyeshadows[5], 0.3)
+        self.offsetPoint(eyeshadows[8], eyeshadows[8], 0.3)
 
         eyeshadows = np.asmatrix(eyeshadows)
         
@@ -347,6 +361,12 @@ class DetectLandmarks(object):
         for point in landmarks[26]:
             eyeshadows = [*eyeshadows, np.asarray(point).reshape(-1)]
 
+        self.offsetPoint(eyeshadows[0], eyeshadows[8], 0.3)
+        self.offsetPoint(eyeshadows[1], eyeshadows[8], 0.3)
+        self.offsetPoint(eyeshadows[2], eyeshadows[7], 0.3)
+        self.offsetPoint(eyeshadows[3], eyeshadows[6], 0.3)
+        self.offsetPoint(eyeshadows[4], eyeshadows[5], 0.3)
+        self.offsetPoint(eyeshadows[8], eyeshadows[8], 0.3)
 
         eyeshadows = np.asmatrix(eyeshadows)
             
@@ -499,12 +519,14 @@ class ApplyMakeup(DetectLandmarks):
             y_points.append(point[1])
         img_base = np.zeros((self.height, self.width))
         cv2.fillConvexPoly(img_base, np.array(np.c_[x_points, y_points], dtype='int32'), 1)
-        img_mask = cv2.GaussianBlur(img_base, (81, 81), 0) #51,51
+        img_mask = cv2.GaussianBlur(img_base, (101, 101), 0) #51,51
         img_blur_3d = np.ndarray([self.height, self.width, 3], dtype='float')
         img_blur_3d[:, :, 0] = img_mask
         img_blur_3d[:, :, 1] = img_mask
         img_blur_3d[:, :, 2] = img_mask
-        self.im_copy = (img_blur_3d * self.image * 0.7 + (1 - img_blur_3d * 0.7) * self.im_copy).astype('uint8')
+        self.im_copy = (
+            img_blur_3d * self.image * LIPS_INTENSIVITY + (1 - img_blur_3d * LIPS_INTENSIVITY) * self.im_copy
+        ).astype('uint8')
 
 
     def __draw_liner(self, eye, kind):
@@ -573,23 +595,25 @@ class ApplyMakeup(DetectLandmarks):
 
 
     def __add_color(self, intensity):
+        print("Add color")
         """ Adds base colour to all points on lips, at mentioned intensity. """
         val = color.rgb2lab(
-            (self.image[self.lip_y, self.lip_x] / 255.)
-            .reshape(len(self.lip_y), 1, 3)
+            (self.image[self.lip_y, self.lip_x] / 255.).reshape(len(self.lip_y), 1, 3)
         ).reshape(len(self.lip_y), 3)
-        l_val, a_val, b_val = np.mean(val[:, 0]), np.mean(val[:, 1]), np.mean(val[:, 2])
-        l1_val, a1_val, b1_val = color.rgb2lab(
-            np.array(
-                (self.red_l / 255., self.green_l / 255., self.blue_l / 255.)
-                ).reshape(1, 1, 3)
-            ).reshape(3,)
-        l_final, a_final, b_final = (l1_val - l_val) * \
-            intensity, (a1_val - a_val) * \
-            intensity, (b1_val - b_val) * intensity
-        val[:, 0] = np.clip(val[:, 0] + l_final, 0, 100)
-        val[:, 1] = np.clip(val[:, 1] + a_final, -127, 128)
-        val[:, 2] = np.clip(val[:, 2] + b_final, -127, 128)
+        # l_val, a_val, b_val = np.mean(val[:, 0]), np.mean(val[:, 1]), np.mean(val[:, 2])
+        # l1_val, a1_val, b1_val = color.rgb2lab(
+        #     np.array(
+        #         (self.red_l / 255., self.green_l / 255., self.blue_l / 255.)
+        #     ).reshape(1, 1, 3)
+        # ).reshape(3,)
+        # l_final = (l1_val - l_val) * intensity
+        # a_final = (a1_val - a_val) * intensity
+        # b_final = (b1_val - b_val) * intensity
+        
+        # print(l_final)
+        # val[:, 0] = np.clip(val[:, 0] + l_final, 0, 100)
+        # val[:, 1] = np.clip(val[:, 1] + a_final, -127, 128)
+        # val[:, 2] = np.clip(val[:, 2] + b_final, -127, 128)
         self.image[self.lip_y, self.lip_x] = color.lab2rgb(val.reshape(
             len(self.lip_y), 1, 3)).reshape(len(self.lip_y), 3) * 255
 
@@ -633,7 +657,7 @@ class ApplyMakeup(DetectLandmarks):
         """ Fill colour in lips. """
         self.__fill_lip_lines(uol_c, uil_c)
         self.__fill_lip_lines(lol_c, lil_c)
-        self.__add_color(1)
+        # self.__add_color(LIPS_INTENSIVITY)
         self.__fill_lip_solid(uol_c, uil_c)
         self.__fill_lip_solid(lol_c, lil_c)
         self.__smoothen_color(uol_c, uil_c)
@@ -681,7 +705,7 @@ class ApplyMakeup(DetectLandmarks):
         val = color.rgb2lab((self.image / 255.)).reshape(self.width * self.height, 3)
         L, A, B = mean(val[:, 0]), mean(val[:, 1]), mean(val[:, 2])
         L1, A1, B1 = color.rgb2lab(np.array((r / 255., g / 255., b / 255.)).reshape(1, 1, 3)).reshape(3, )
-        ll, aa, bb = (L1 - L) * intensivity, (A1 - A) * intensivity, (B1 - B) * intensivity
+        ll, aa, bb = (L1 - L) * BLUSH_INTENSIVITY, (A1 - A) * BLUSH_INTENSIVITY, (B1 - B) * BLUSH_INTENSIVITY
         val[:, 0] = np.clip(val[:, 0] + ll, 0, 100)
         val[:, 1] = np.clip(val[:, 1] + aa, -127, 128)
         val[:, 2] = np.clip(val[:, 2] + bb, -127, 128)
@@ -691,7 +715,7 @@ class ApplyMakeup(DetectLandmarks):
         val = color.rgb2lab((self.image / 255.)).reshape(self.width * self.height, 3)
         L, A, B = mean(val[:, 0]), mean(val[:, 1]), mean(val[:, 2])
         L1, A1, B1 = color.rgb2lab(np.array((r / 255., g / 255., b / 255.)).reshape(1, 1, 3)).reshape(3, )
-        ll, aa, bb = (L1 - L) * 0.5, (A1 - A) * 0.5, (B1 - B) * 0.5
+        ll, aa, bb = (L1 - L) * EYESHADOWN_INTENSIVITY, (A1 - A) * EYESHADOWN_INTENSIVITY, (B1 - B) * EYESHADOWN_INTENSIVITY
         val[:, 0] = np.clip(val[:, 0] + ll, 0, 100)
         val[:, 1] = np.clip(val[:, 1] + aa, -127, 128)
         val[:, 2] = np.clip(val[:, 2] + bb, -127, 128)
@@ -708,10 +732,15 @@ class ApplyMakeup(DetectLandmarks):
         self.im_copy = (imgBlur3D * self.image + (1 - imgBlur3D) * self.im_copy).astype('uint8')
 
     def smoothen_eyeshadow(self, x, y):
+        print(x, y)
         imgBase = zeros((self.height, self.width))
         cv2.fillConvexPoly(imgBase, np.array(c_[x, y], dtype='int32'), 1)
-        imgMask = cv2.GaussianBlur(imgBase, (51, 51), 0)
-        imgBlur3D = np.ndarray([self.height, self.width, 3], dtype='float')
+        imgMask = cv2.GaussianBlur(imgBase, (71, 71), 0)
+        
+        kernel = np.ones((12,12),np.uint8)
+        imgMask = cv2.erode(imgMask,kernel,iterations = 1)
+        
+        imgBlur3D = np.zeros([self.height, self.width, 3], dtype='float64')
         imgBlur3D[:, :, 0] = imgMask
         imgBlur3D[:, :, 1] = imgMask
         imgBlur3D[:, :, 2] = imgMask
@@ -756,8 +785,8 @@ class ApplyMakeup(DetectLandmarks):
         blush_rigth_x, blush_rigth_y = self.get_interior_points(blush_rigth_x, blush_rigth_y)
         
         self.apply_blush_color(rblush, gblush, bblush)
-        self.smoothen_blush(blush_left_x, blush_left_y)
         self.smoothen_blush(blush_rigth_x, blush_rigth_y)
+        self.smoothen_blush(blush_left_x, blush_left_y)
 
         self.im_copy = cv2.cvtColor(self.im_copy, cv2.COLOR_BGR2RGB)
         name = '_color_' + str(self.red_b) + '_' + str(self.green_b) + '_' + str(self.blue_b)
