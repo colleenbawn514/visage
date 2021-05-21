@@ -133,7 +133,7 @@ def callback_handler(call):
     elif call.data == 'blush_r162_g59_b108':
         user[chat_id]['blush_color'] = { 'r': 162, 'g': 59 , 'b': 108 }
         user[chat_id]['use_blush'] = True    
-        bot.edit_message_text('Цвет румян: фиолетовый', chat_id, call.message.id)
+        bot.edit_message_text('Цвет румян: лиловый', chat_id, call.message.id)
         processing(chat_id)
     
     elif call.data == 'blush_r250_g218_b221':
@@ -310,7 +310,7 @@ def choose_lipstik(chat_id):
 
 def choose_blush(chat_id):
     blush_colors_with_ids = [
-        {"Фиолетовый": "blush_r162_g59_b108"},
+        {"Лиловый": "blush_r162_g59_b108"},
         {"Розовый": "blush_r250_g218_b221"},
         {"Красный": "blush_r205_g92_b92"},
         {"Коричневый": "blush_r150_g75_b0"},
@@ -365,10 +365,7 @@ def processing(chat_id):
     for i in range(len(user[chat_id]['source_images'])):
         try:
             list_points = makeup.get_face_data(user[chat_id]['source_images'][i], 'FILE_READ')
-            start_time = time.time()
             result_src = photo_processing(user[chat_id]['source_images'][i], user[chat_id], list_points)
-            print("Фото обработано за:")
-            print("--- %s seconds ---" % (time.time() - start_time))
             user[chat_id]['result_images'].append(result_src)
             photo = open(result_src, 'rb')
             bot.send_photo(chat_id, photo)
@@ -377,7 +374,7 @@ def processing(chat_id):
             bot.reply_to(user[chat_id]['photo_messages'][i], 'Не удалось обработать эту фотографию(')
     bot.send_message(
         chat_id,
-        'Все фото обработаны, вы так прекрасы 🥰. Напишите /go что бы обработать ещё фото',
+        'Все фото обработаны, вы так прекрасны 🥰. Напишите /go что бы обработать ещё фото',
     )
     clear_content(chat_id)
     
@@ -390,7 +387,7 @@ def check_photo(image_path):
 #обработка фото
 def photo_processing(image_path, options, list_points):
     result_src = image_path
-    
+    start_time = time.time()
     if options['use_lipstick']:
         result_src = makeup.apply_lipstick(
             result_src,
@@ -417,6 +414,9 @@ def photo_processing(image_path, options, list_points):
             options['eyeshadow_color']['g'],
             options['eyeshadow_color']['b'],
         )
+    print("Фото обработано за:")
+    print("--- %s seconds ---" % (time.time() - start_time))
+    
     return result_src
 
 #очищение папки с фото

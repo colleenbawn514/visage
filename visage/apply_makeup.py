@@ -21,8 +21,8 @@ from skimage import color
 
 PREDICTOR_PATH = "shape_predictor_68_face_landmarks.dat"
 CASC_PATH = "haarcascade_frontalface_default.xml"
-BLUSH_INTENSIVITY = 0.5
-EYESHADOWN_INTENSIVITY = 0.4
+BLUSH_INTENSIVITY = 0.6
+EYESHADOWN_INTENSIVITY = 0.2
 LIPS_INTENSIVITY = 0.3
 
 class DetectLandmarks(object):
@@ -732,7 +732,6 @@ class ApplyMakeup(DetectLandmarks):
         self.im_copy = (imgBlur3D * self.image + (1 - imgBlur3D) * self.im_copy).astype('uint8')
 
     def smoothen_eyeshadow(self, x, y):
-        print(x, y)
         imgBase = zeros((self.height, self.width))
         cv2.fillConvexPoly(imgBase, np.array(c_[x, y], dtype='int32'), 1)
         imgMask = cv2.GaussianBlur(imgBase, (71, 71), 0)
