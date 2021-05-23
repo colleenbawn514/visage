@@ -21,7 +21,7 @@ from skimage import color
 
 PREDICTOR_PATH = "shape_predictor_68_face_landmarks.dat"
 CASC_PATH = "haarcascade_frontalface_default.xml"
-BLUSH_INTENSIVITY = 0.6
+BLUSH_INTENSIVITY = 0.3
 EYESHADOWN_INTENSIVITY = 0.2
 LIPS_INTENSIVITY = 0.3
 
@@ -108,6 +108,7 @@ class DetectLandmarks(object):
             Returns `None` if face not found in image.
 
         """
+        start_time = time.time()
         image = 0
         if flag == self.FILE_READ:
             image = cv2.imread(image_file)
@@ -121,7 +122,8 @@ class DetectLandmarks(object):
         landmarks = self.__get_landmarks(image)
         if landmarks[0] is None or landmarks[1] is None:
             return None
-            
+        print("Фото:")
+        print("--- %s seconds ---" % (time.time() - start_time))
         return landmarks
 
 
